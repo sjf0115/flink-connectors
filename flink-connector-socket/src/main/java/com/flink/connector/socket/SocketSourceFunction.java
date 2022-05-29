@@ -2,11 +2,11 @@ package com.flink.connector.socket;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
+import org.apache.flink.api.scala.typeutils.Types;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
-import org.apache.flink.types.Row;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
@@ -17,58 +17,73 @@ import java.net.Socket;
  * 公众号：大数据生态
  * 日期：2022/5/26 下午11:01
  */
-public class SocketSourceFunction extends RichSourceFunction<Row> implements ResultTypeQueryable<Row> {
-
+public class SocketSourceFunction extends RichSourceFunction<String> implements ResultTypeQueryable<String> {
+    private static final String DEFAULT_DELIMITER = "\n";
+    private static final long DEFAULT_MAX_NUM_RETRIES = 3;
+    private static final long DEFAULT_DELAY_BETWEEN_RETRIES = 500;
     private final String hostname;
     private final int port;
-    private final byte byteDelimiter;
+    private final String delimiter;
     private final long maxNumRetries;
     private final long delayBetweenRetries;
-
-    //private final DeserializationSchema<Row> deserializer;
 
     private volatile boolean isRunning = true;
     private Socket currentSocket;
 
-    public SocketSourceFunction(String hostname, int port, byte byteDelimiter, long maxNumRetries, long delayBetweenRetries) {
+    public SocketSourceFunction(String hostname, int port, String delimiter, long maxNumRetries, long delayBetweenRetries) {
         this.hostname = hostname;
         this.port = port;
-        this.byteDelimiter = byteDelimiter;
+        this.delimiter = delimiter;
         this.maxNumRetries = maxNumRetries;
         this.delayBetweenRetries = delayBetweenRetries;
     }
 
-    public SocketSourceFunction(String hostname, int port, byte byteDelimiter) {
+    public SocketSourceFunction(String hostname, int port, String delimiter) {
         this.hostname = hostname;
         this.port = port;
-        this.byteDelimiter = byteDelimiter;
-        this.maxNumRetries = 0;
-        this.delayBetweenRetries = 500;
+        this.delimiter = delimiter;
+        this.maxNumRetries = DEFAULT_MAX_NUM_RETRIES;
+        this.delayBetweenRetries = DEFAULT_DELAY_BETWEEN_RETRIES;
+    }
+
+    public SocketSourceFunction(String hostname, int port) {
+        this.hostname = hostname;
+        this.port = port;
+        this.delimiter = DEFAULT_DELIMITER;
+        this.maxNumRetries = DEFAULT_MAX_NUM_RETRIES;
+        this.delayBetweenRetries = DEFAULT_DELAY_BETWEEN_RETRIES;
     }
 
     @Override
-    public TypeInformation<Row> getProducedType() {
-        //return deserializer.getProducedType();
-        return null;
+    public TypeInformation<String> getProducedType() {
+        return Types.STRING();
     }
 
     @Override
-    public void run(SourceContext<Row> sourceContext) throws Exception {
+    public void run(SourceContext<String> sourceContext) throws Exception {
         long attempt = 0;
+        final StringBuilder result = new StringBuilder();
         while (isRunning) {
-            try (final Socket socket = new Socket()) {
+            try (Socket socket = new Socket()) {
                 currentSocket = socket;
                 socket.connect(new InetSocketAddress(hostname, port), 0);
-                try (InputStream stream = socket.getInputStream()) {
-                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                    int b;
-                    while ((b = stream.read()) >= 0) {
-                        if (b != byteDelimiter) {
-                            buffer.write(b);
-                        }
-                        else {
-                            //sourceContext.collect(deserializer.deserialize(buffer.toByteArray()));
-                            buffer.reset();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                    char[] buffer = new char[8012];
+                    int bytes;
+                    while ((bytes = reader.read(buffer)) != -1) {
+                        result.append(buffer, 0, bytes);
+                        int delimiterPos;
+                        // 根据指定的分隔符循环切分字符串 buffer
+                        while (result.length() >= delimiter.length() && (delimiterPos = result.indexOf(delimiter)) != -1) {
+                            // 切分字符串 result
+                            String record = result.substring(0, delimiterPos);
+                            if (delimiter.equals("\n") && record.endsWith("\r")) {
+                                record = record.substring(0, record.length() - 1);
+                            }
+                            // 输出切分好的字符串
+                            sourceContext.collect(record);
+                            // 切分剩余字符串
+                            result.delete(0, delimiterPos + delimiter.length());
                         }
                     }
                 }
