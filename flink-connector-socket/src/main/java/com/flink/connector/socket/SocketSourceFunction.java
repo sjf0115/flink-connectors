@@ -1,5 +1,6 @@
 package com.flink.connector.socket;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
 import org.apache.flink.api.scala.typeutils.Types;
@@ -9,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Objects;
 
 /**
  * 功能：Socket SourceFunction
@@ -21,6 +23,7 @@ public class SocketSourceFunction extends RichSourceFunction<String> implements 
     private static final String DEFAULT_DELIMITER = "\n";
     private static final long DEFAULT_MAX_NUM_RETRIES = 3;
     private static final long DEFAULT_DELAY_BETWEEN_RETRIES = 500;
+
     private final String hostname;
     private final int port;
     private final String delimiter;
@@ -30,28 +33,12 @@ public class SocketSourceFunction extends RichSourceFunction<String> implements 
     private volatile boolean isRunning = true;
     private Socket currentSocket;
 
-    public SocketSourceFunction(String hostname, int port, String delimiter, long maxNumRetries, long delayBetweenRetries) {
-        this.hostname = hostname;
-        this.port = port;
-        this.delimiter = delimiter;
-        this.maxNumRetries = maxNumRetries;
-        this.delayBetweenRetries = delayBetweenRetries;
-    }
-
-    public SocketSourceFunction(String hostname, int port, String delimiter) {
-        this.hostname = hostname;
-        this.port = port;
-        this.delimiter = delimiter;
-        this.maxNumRetries = DEFAULT_MAX_NUM_RETRIES;
-        this.delayBetweenRetries = DEFAULT_DELAY_BETWEEN_RETRIES;
-    }
-
-    public SocketSourceFunction(String hostname, int port) {
-        this.hostname = hostname;
-        this.port = port;
-        this.delimiter = DEFAULT_DELIMITER;
-        this.maxNumRetries = DEFAULT_MAX_NUM_RETRIES;
-        this.delayBetweenRetries = DEFAULT_DELAY_BETWEEN_RETRIES;
+    public SocketSourceFunction(SocketOption option) {
+        this.hostname = option.getHostname();
+        this.port = option.getPort();
+        this.delimiter = StringUtils.isBlank(option.getDelimiter()) ? DEFAULT_DELIMITER : option.getDelimiter();
+        this.maxNumRetries = Objects.equals(option.getMaxNumRetries(), null) ? DEFAULT_MAX_NUM_RETRIES : option.getMaxNumRetries();
+        this.delayBetweenRetries = Objects.equals(option.getDelayBetweenRetries(), null) ? DEFAULT_DELAY_BETWEEN_RETRIES : option.getDelayBetweenRetries();
     }
 
     @Override

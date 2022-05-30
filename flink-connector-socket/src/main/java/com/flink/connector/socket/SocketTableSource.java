@@ -13,29 +13,45 @@ import org.apache.flink.table.sources.StreamTableSource;
  * 日期：2022/5/26 下午10:57
  */
 public class SocketTableSource implements StreamTableSource<String>{
+    private final SocketOption socketOption;
+    private final TableSchema schema;
 
-    private final String hostname;
-    private final int port;
-    private final String delimiter;
-    private final long maxNumRetries;
-    private final long delayBetweenRetries;
-
-    public SocketTableSource(long delayBetweenRetries, long maxNumRetries, String delimiter, int port, String hostname) {
-        this.delayBetweenRetries = delayBetweenRetries;
-        this.maxNumRetries = maxNumRetries;
-        this.delimiter = delimiter;
-        this.port = port;
-        this.hostname = hostname;
+    public SocketTableSource(SocketOption socketOption, TableSchema schema) {
+        this.socketOption = socketOption;
+        this.schema = schema;
     }
 
     @Override
     public DataStream<String> getDataStream(StreamExecutionEnvironment env) {
-        SocketSourceFunction socketSourceFunction = new SocketSourceFunction(hostname, port, delimiter, maxNumRetries, delayBetweenRetries);
+        SocketSourceFunction socketSourceFunction = new SocketSourceFunction(socketOption);
         return env.addSource(socketSourceFunction);
     }
 
     @Override
     public TableSchema getTableSchema() {
-        return null;
+        return schema;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private TableSchema schema;
+        private SocketOption socketOption;
+
+        public Builder setSchema(TableSchema schema) {
+            this.schema = schema;
+            return this;
+        }
+
+        public Builder setSocketOption(SocketOption socketOption) {
+            this.socketOption = socketOption;
+            return this;
+        }
+
+        public SocketTableSource build() {
+            return new SocketTableSource(socketOption, schema);
+        }
     }
 }
