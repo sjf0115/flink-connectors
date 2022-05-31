@@ -2,8 +2,8 @@ package com.flink.connector.socket;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
-import org.apache.flink.api.scala.typeutils.Types;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 
 import java.io.BufferedReader;
@@ -43,7 +43,7 @@ public class SocketSourceFunction extends RichSourceFunction<String> implements 
 
     @Override
     public TypeInformation<String> getProducedType() {
-        return Types.STRING();
+        return Types.STRING;
     }
 
     @Override

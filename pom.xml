@@ -27,7 +27,7 @@
                 <groupId>org.apache.flink</groupId>
                 <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
                 <version>${flink.version}</version>
-                <scope>provided</scope>
+                <!--<scope>provided</scope>-->
             </dependency>
 
             <!-- Flink table -->
@@ -35,7 +35,7 @@
                 <groupId>org.apache.flink</groupId>
                 <artifactId>flink-table-api-java-bridge_${scala.binary.version}</artifactId>
                 <version>${flink.version}</version>
-                <scope>provided</scope>
+                <!--<scope>provided</scope>-->
             </dependency>
 
             <!-- Flink 自定义 -->
@@ -43,15 +43,15 @@
                 <groupId>org.apache.flink</groupId>
                 <artifactId>flink-table-common</artifactId>
                 <version>${flink.version}</version>
-                <scope>provided</scope>
+                <!--<scope>provided</scope>-->
             </dependency>
 
             <!-- 本地运行 Table API& SQL -->
             <dependency>
                 <groupId>org.apache.flink</groupId>
-                <artifactId>flink-table-planner-blink_${scala.binary.version}</artifactId>
+                <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
                 <version>${flink.version}</version>
-                <scope>provided</scope>
+                <!--<scope>provided</scope>-->
             </dependency>
 
             <!-- Redis -->
