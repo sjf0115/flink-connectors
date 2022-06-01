@@ -12,7 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 import static com.flink.connector.socket.SocketSourceValidator.*;
-import static org.apache.flink.table.descriptors.Schema.SCHEMA;
+import static org.apache.flink.table.descriptors.FormatDescriptorValidator.FORMAT;
+import static org.apache.flink.table.descriptors.Schema.*;
 
 
 /**
@@ -33,11 +34,19 @@ public class SocketSourceTableFactory implements StreamTableSourceFactory {
 
     public List<String> supportedProperties() {
         List<String> properties = new ArrayList<>();
+        // option
         properties.add(CONNECTOR_HOST);
         properties.add(CONNECTOR_PORT);
         properties.add(CONNECTOR_DELIMITER);
         properties.add(CONNECTOR_MAX_NUM_RETRIES);
         properties.add(CONNECTOR_DELAY_BETWEEN_RETRIES);
+        // schema
+        properties.add(SCHEMA + ".#." + SCHEMA_DATA_TYPE);
+        properties.add(SCHEMA + ".#." + SCHEMA_NAME);
+        properties.add(SCHEMA + ".#." + SCHEMA_FROM);
+        // format wildcard
+        properties.add(FORMAT + ".*");
+        properties.add(CONNECTOR + ".*");
         return properties;
     }
 

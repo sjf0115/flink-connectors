@@ -46,7 +46,7 @@ public class SocketOption {
         this.delimiter = delimiter;
     }
 
-    public long getMaxNumRetries() {
+    public Long getMaxNumRetries() {
         return maxNumRetries;
     }
 
@@ -54,7 +54,7 @@ public class SocketOption {
         this.maxNumRetries = maxNumRetries;
     }
 
-    public long getDelayBetweenRetries() {
+    public Long getDelayBetweenRetries() {
         return delayBetweenRetries;
     }
 

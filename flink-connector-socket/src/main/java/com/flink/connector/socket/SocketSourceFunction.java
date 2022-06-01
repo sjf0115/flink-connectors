@@ -2,9 +2,10 @@ package com.flink.connector.socket;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
+import org.apache.flink.table.api.TableSchema;
+import org.apache.flink.types.Row;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -19,7 +20,8 @@ import java.util.Objects;
  * 公众号：大数据生态
  * 日期：2022/5/26 下午11:01
  */
-public class SocketSourceFunction extends RichSourceFunction<String> implements ResultTypeQueryable<String> {
+public class SocketSourceFunction extends RichSourceFunction<Row> implements ResultTypeQueryable<Row> {
+    private final TableSchema schema;
     private static final String DEFAULT_DELIMITER = "\n";
     private static final long DEFAULT_MAX_NUM_RETRIES = 3;
     private static final long DEFAULT_DELAY_BETWEEN_RETRIES = 500;
@@ -33,7 +35,8 @@ public class SocketSourceFunction extends RichSourceFunction<String> implements 
     private volatile boolean isRunning = true;
     private Socket currentSocket;
 
-    public SocketSourceFunction(SocketOption option) {
+    public SocketSourceFunction(TableSchema schema, SocketOption option) {
+        this.schema = schema;
         this.hostname = option.getHostname();
         this.port = option.getPort();
         this.delimiter = StringUtils.isBlank(option.getDelimiter()) ? DEFAULT_DELIMITER : option.getDelimiter();
@@ -42,12 +45,12 @@ public class SocketSourceFunction extends RichSourceFunction<String> implements 
     }
 
     @Override
-    public TypeInformation<String> getProducedType() {
-        return Types.STRING;
+    public TypeInformation<Row> getProducedType() {
+        return schema.toRowType();
     }
 
     @Override
-    public void run(SourceContext<String> sourceContext) throws Exception {
+    public void run(SourceContext<Row> sourceContext) throws Exception {
         long attempt = 0;
         final StringBuilder result = new StringBuilder();
         while (isRunning) {
@@ -68,7 +71,7 @@ public class SocketSourceFunction extends RichSourceFunction<String> implements 
                                 record = record.substring(0, record.length() - 1);
                             }
                             // 输出切分好的字符串
-                            sourceContext.collect(record);
+                            sourceContext.collect(Row.of(record));
                             // 切分剩余字符串
                             result.delete(0, delimiterPos + delimiter.length());
                         }

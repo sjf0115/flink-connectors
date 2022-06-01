@@ -27,21 +27,19 @@ public class SocketSimpleExample {
 
         // 创建 Socket Source 表
         String sourceSql = "CREATE TABLE socket_source_table (\n" +
-                "  word STRING COMMENT '单词',\n" +
-                "  frequency BIGINT COMMENT '次数'\n" +
+                "  word STRING COMMENT '单词'\n" +
                 ") WITH (\n" +
                 "  'connector.type' = 'socket',\n" +
                 "  'update-mode' = 'append',\n" +
                 "  'host' = 'localhost',\n" +
                 "  'port' = '9000',\n" +
                 "  'delimiter' = '\n',\n" +
-                "  'format' = 'json',\n" +
                 "  'maxNumRetries' = '3',\n" +
                 "  'delayBetweenRetries' = '500'\n" +
                 ")";
         tEnv.sqlUpdate(sourceSql);
 
-        Table table = tEnv.sqlQuery("SELECT word, frequency\n" +
+        Table table = tEnv.sqlQuery("SELECT word\n" +
                 "FROM socket_source_table");
         DataStream dataStream = tEnv.toAppendStream(table, Row.class);
         dataStream.print();
