@@ -30,7 +30,6 @@ public class SocketSimpleExample {
                 "  word STRING COMMENT '单词'\n" +
                 ") WITH (\n" +
                 "  'connector.type' = 'socket',\n" +
-                "  'update-mode' = 'append',\n" +
                 "  'host' = 'localhost',\n" +
                 "  'port' = '9000',\n" +
                 "  'delimiter' = '\n',\n" +

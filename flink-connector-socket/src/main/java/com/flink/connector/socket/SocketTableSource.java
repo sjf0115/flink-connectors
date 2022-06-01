@@ -1,11 +1,14 @@
 package com.flink.connector.socket;
 
-import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.sources.StreamTableSource;
+import org.apache.flink.table.types.DataType;
 import org.apache.flink.types.Row;
+
+import static org.apache.flink.table.types.utils.TypeConversions.fromDataTypeToLegacyInfo;
 
 /**
  * 功能：Socket TableSource
@@ -17,21 +20,28 @@ import org.apache.flink.types.Row;
 public class SocketTableSource implements StreamTableSource<Row>{
     private final SocketOption socketOption;
     private final TableSchema schema;
+    private final DataType producedDataType;
 
     public SocketTableSource(SocketOption socketOption, TableSchema schema) {
         this.socketOption = socketOption;
         this.schema = schema;
+        this.producedDataType = schema.toRowDataType();
     }
 
     @Override
     public DataStream<Row> getDataStream(StreamExecutionEnvironment env) {
-        SocketSourceFunction socketSourceFunction = new SocketSourceFunction(schema, socketOption);
+        RowTypeInfo rowTypeInfo = (RowTypeInfo) fromDataTypeToLegacyInfo(producedDataType);
+        SocketSourceFunction socketSourceFunction = SocketSourceFunction.builder()
+                .setSocketOption(socketOption)
+                .setFieldNames(rowTypeInfo.getFieldNames())
+                .setFieldTypes(rowTypeInfo.getFieldTypes())
+                .build();
         return env.addSource(socketSourceFunction);
     }
 
     @Override
-    public TypeInformation<Row> getReturnType() {
-        return schema.toRowType();
+    public DataType getProducedDataType() {
+        return producedDataType;
     }
 
     @Override

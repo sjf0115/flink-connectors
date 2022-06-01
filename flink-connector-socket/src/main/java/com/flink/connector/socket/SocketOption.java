@@ -1,5 +1,9 @@
 package com.flink.connector.socket;
 
+import javax.annotation.Nullable;
+import java.io.Serializable;
+import java.util.Optional;
+
 /**
  * 功能：Socket 参数
  * 作者：SmartSi
@@ -7,11 +11,14 @@ package com.flink.connector.socket;
  * 公众号：大数据生态
  * 日期：2022/5/30 下午10:04
  */
-public class SocketOption {
+public class SocketOption implements Serializable {
     private String hostname;
     private int port;
+    @Nullable
     private String delimiter;
+    @Nullable
     private Long maxNumRetries;
+    @Nullable
     private Long delayBetweenRetries;
 
     public SocketOption(String hostname, int port, String delimiter, Long maxNumRetries, Long delayBetweenRetries) {
@@ -26,40 +33,20 @@ public class SocketOption {
         return hostname;
     }
 
-    public void setHostname(String hostname) {
-        this.hostname = hostname;
-    }
-
     public int getPort() {
         return port;
     }
 
-    public void setPort(int port) {
-        this.port = port;
+    public Optional<String> getDelimiter() {
+        return Optional.ofNullable(delimiter);
     }
 
-    public String getDelimiter() {
-        return delimiter;
+    public Optional<Long> getMaxNumRetries() {
+        return Optional.ofNullable(maxNumRetries);
     }
 
-    public void setDelimiter(String delimiter) {
-        this.delimiter = delimiter;
-    }
-
-    public Long getMaxNumRetries() {
-        return maxNumRetries;
-    }
-
-    public void setMaxNumRetries(Long maxNumRetries) {
-        this.maxNumRetries = maxNumRetries;
-    }
-
-    public Long getDelayBetweenRetries() {
-        return delayBetweenRetries;
-    }
-
-    public void setDelayBetweenRetries(Long delayBetweenRetries) {
-        this.delayBetweenRetries = delayBetweenRetries;
+    public Optional<Long> getDelayBetweenRetries() {
+        return Optional.ofNullable(delayBetweenRetries);
     }
 
     public static Builder builder() {

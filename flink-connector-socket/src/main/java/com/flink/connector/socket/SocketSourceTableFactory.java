@@ -2,6 +2,7 @@ package com.flink.connector.socket;
 
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.descriptors.DescriptorProperties;
+import org.apache.flink.table.descriptors.SchemaValidator;
 import org.apache.flink.table.factories.StreamTableSourceFactory;
 import org.apache.flink.table.sources.StreamTableSource;
 import org.apache.flink.table.utils.TableSchemaUtils;
@@ -11,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.flink.connector.socket.SocketSourceValidator.*;
+import static com.flink.connector.socket.SocketValidator.*;
 import static org.apache.flink.table.descriptors.FormatDescriptorValidator.FORMAT;
 import static org.apache.flink.table.descriptors.Schema.*;
 
@@ -27,7 +28,6 @@ public class SocketSourceTableFactory implements StreamTableSourceFactory {
 
     public Map<String, String> requiredContext() {
         Map<String, String> context = new HashMap<>();
-        context.put("update-mode", "append");
         context.put(CONNECTOR_TYPE, CONNECTOR_TYPE_VALUE);
         return context;
     }
@@ -51,24 +51,42 @@ public class SocketSourceTableFactory implements StreamTableSourceFactory {
     }
 
     public StreamTableSource createStreamTableSource(Map properties) {
-        DescriptorProperties descriptorProperties = new DescriptorProperties(true);
-        descriptorProperties.putProperties(properties);
+        // 有效性校验
+        DescriptorProperties validatedProperties = getValidatedProperties(properties);
 
-        // Socket参数
-        SocketOption socketOption = getSocketOption(descriptorProperties);
+        // Socket 参数
+        SocketOption socketOption = getSocketOption(validatedProperties);
 
-        // 做什么用
-        TableSchema tableSchema = descriptorProperties.getTableSchema(SCHEMA);
-        TableSchema physicalSchema = TableSchemaUtils.getPhysicalSchema(tableSchema);
+        // TableSchema
+        TableSchema tableSchema = validatedProperties.getTableSchema(SCHEMA);
+        TableSchema schema = TableSchemaUtils.getPhysicalSchema(tableSchema);
 
         // 创建 SocketTableSource
         SocketTableSource tableSource = SocketTableSource.builder()
-                .setSchema(physicalSchema)
+                .setSchema(schema)
                 .setSocketOption(socketOption)
                 .build();
         return tableSource;
     }
 
+    // 有效 Properties
+    private DescriptorProperties getValidatedProperties(Map<String, String> properties) {
+        // Map -> DescriptorProperties
+        DescriptorProperties descriptorProperties = new DescriptorProperties(true);
+        descriptorProperties.putProperties(properties);
+
+        // Schema 校验
+        SchemaValidator schemaValidator = new SchemaValidator(true, false, false);
+        schemaValidator.validate(descriptorProperties);
+
+        // Socket 参数校验
+        SocketValidator socketValidator = new SocketValidator();
+        socketValidator.validate(descriptorProperties);
+
+        return descriptorProperties;
+    }
+
+    // Socket 参数
     private SocketOption getSocketOption(DescriptorProperties descriptorProperties) {
         String host = descriptorProperties.getString(CONNECTOR_HOST);
         int port = descriptorProperties.getInt(CONNECTOR_PORT);
@@ -77,6 +95,7 @@ public class SocketSourceTableFactory implements StreamTableSourceFactory {
                 .setHostname(host)
                 .setPort(port);
 
+        // 可选参数
         descriptorProperties.getOptionalString(CONNECTOR_DELIMITER).ifPresent(builder::setDelimiter);
         descriptorProperties.getOptionalLong(CONNECTOR_MAX_NUM_RETRIES).ifPresent(builder::setMaxNumRetries);
         descriptorProperties.getOptionalLong(CONNECTOR_DELAY_BETWEEN_RETRIES).ifPresent(builder::setDelayBetweenRetries);

@@ -12,7 +12,7 @@ import java.util.Optional;
  * 公众号：大数据生态
  * 日期：2022/5/30 上午8:46
  */
-public class SocketSourceValidator extends ConnectorDescriptorValidator {
+public class SocketValidator extends ConnectorDescriptorValidator {
     public static final String CONNECTOR_TYPE_VALUE = "socket";
     public static final String CONNECTOR_HOST = "host";
     public static final String CONNECTOR_PORT = "port";
