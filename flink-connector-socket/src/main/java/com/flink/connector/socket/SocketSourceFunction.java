@@ -1,9 +1,11 @@
 package com.flink.connector.socket;
 
+import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
+import org.apache.flink.table.data.RowData;
 import org.apache.flink.types.Row;
 
 import java.io.BufferedReader;
@@ -18,7 +20,7 @@ import java.net.Socket;
  * 公众号：大数据生态
  * 日期：2022/5/26 下午11:01
  */
-public class SocketSourceFunction extends RichSourceFunction<Row> implements ResultTypeQueryable<Row> {
+public class SocketSourceFunction extends RichSourceFunction<RowData> implements ResultTypeQueryable<RowData> {
     private static final String DEFAULT_DELIMITER = "\n";
     private static final long DEFAULT_MAX_NUM_RETRIES = 3;
     private static final long DEFAULT_DELAY_BETWEEN_RETRIES = 500;
@@ -28,29 +30,27 @@ public class SocketSourceFunction extends RichSourceFunction<Row> implements Res
     private final String delimiter;
     private final long maxNumRetries;
     private final long delayBetweenRetries;
-    private final String[] fieldNames;
-    private final TypeInformation[] fieldTypes;
+    private final DeserializationSchema<RowData> deserializer;
 
     private volatile boolean isRunning = true;
     private Socket currentSocket;
 
-    public SocketSourceFunction(SocketOption option, String[] fieldNames, TypeInformation[] fieldTypes) {
+    public SocketSourceFunction(SocketOption option, DeserializationSchema<RowData> deserializer) {
         this.hostname = option.getHostname();
         this.port = option.getPort();
         this.delimiter = option.getDelimiter().orElse(DEFAULT_DELIMITER);
         this.maxNumRetries = option.getMaxNumRetries().orElse(DEFAULT_MAX_NUM_RETRIES);
         this.delayBetweenRetries = option.getDelayBetweenRetries().orElse(DEFAULT_DELAY_BETWEEN_RETRIES);
-        this.fieldNames = fieldNames;
-        this.fieldTypes = fieldTypes;
+        this.deserializer = deserializer;
     }
 
     @Override
-    public TypeInformation<Row> getProducedType() {
-        return new RowTypeInfo(fieldTypes, fieldNames);
+    public TypeInformation<RowData> getProducedType() {
+        return deserializer.getProducedType();
     }
 
     @Override
-    public void run(SourceContext<Row> sourceContext) throws Exception {
+    public void run(SourceContext<RowData> sourceContext) throws Exception {
         long attempt = 0;
         final StringBuilder result = new StringBuilder();
         while (isRunning) {
@@ -106,26 +106,20 @@ public class SocketSourceFunction extends RichSourceFunction<Row> implements Res
 
     public static class Builder {
         private SocketOption socketOption;
-        protected String[] fieldNames;
-        protected TypeInformation[] fieldTypes;
+        private DeserializationSchema<RowData> deserializer;
 
         public Builder setSocketOption(SocketOption socketOption) {
             this.socketOption = socketOption;
             return this;
         }
 
-        public Builder setFieldNames(String[] fieldNames) {
-            this.fieldNames = fieldNames;
-            return this;
-        }
-
-        public Builder setFieldTypes(TypeInformation[] fieldTypes) {
-            this.fieldTypes = fieldTypes;
+        public Builder setDeserializationSchema(DeserializationSchema<RowData> deserializer) {
+            this.deserializer = deserializer;
             return this;
         }
 
         public SocketSourceFunction build() {
-            return new SocketSourceFunction(socketOption, fieldNames, fieldTypes);
+            return new SocketSourceFunction(socketOption, deserializer);
         }
     }
 }

@@ -1,20 +1,19 @@
 package com.flink.connector.socket;
 
-import org.apache.flink.table.api.TableSchema;
-import org.apache.flink.table.descriptors.DescriptorProperties;
-import org.apache.flink.table.descriptors.SchemaValidator;
-import org.apache.flink.table.factories.StreamTableSourceFactory;
-import org.apache.flink.table.sources.StreamTableSource;
-import org.apache.flink.table.utils.TableSchemaUtils;
+import org.apache.flink.api.common.serialization.DeserializationSchema;
+import org.apache.flink.configuration.ConfigOption;
+import org.apache.flink.configuration.ConfigOptions;
+import org.apache.flink.configuration.ReadableConfig;
+import org.apache.flink.table.connector.format.DecodingFormat;
+import org.apache.flink.table.connector.source.DynamicTableSource;
+import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.factories.DeserializationFormatFactory;
+import org.apache.flink.table.factories.DynamicTableSourceFactory;
+import org.apache.flink.table.factories.FactoryUtil;
+import org.apache.flink.table.types.DataType;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static com.flink.connector.socket.SocketValidator.*;
-import static org.apache.flink.table.descriptors.FormatDescriptorValidator.FORMAT;
-import static org.apache.flink.table.descriptors.Schema.*;
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**
@@ -24,82 +23,85 @@ import static org.apache.flink.table.descriptors.Schema.*;
  * 公众号：大数据生态
  * 日期：2022/5/26 下午10:40
  */
-public class SocketSourceTableFactory implements StreamTableSourceFactory {
+public class SocketSourceTableFactory implements DynamicTableSourceFactory {
 
-    public Map<String, String> requiredContext() {
-        Map<String, String> context = new HashMap<>();
-        context.put(CONNECTOR_TYPE, CONNECTOR_TYPE_VALUE);
-        return context;
+    public static final ConfigOption<String> HOSTNAME = ConfigOptions.key("hostname")
+            .stringType()
+            .noDefaultValue();
+
+    public static final ConfigOption<Integer> PORT = ConfigOptions.key("port")
+            .intType()
+            .noDefaultValue();
+
+    public static final ConfigOption<String> DELIMITER = ConfigOptions.key("delimiter")
+            .stringType()
+            .defaultValue("\n");
+
+    public static final ConfigOption<Long> MAX_NUM_RETRIES = ConfigOptions.key("max_num_retries")
+            .longType()
+            .defaultValue(3L);
+
+    public static final ConfigOption<Long> DELAY_BETWEEN_RETRIES = ConfigOptions.key("delay_between_retries")
+            .longType()
+            .defaultValue(500L);
+
+    @Override
+    public String factoryIdentifier() {
+        return "socket";
     }
 
-    public List<String> supportedProperties() {
-        List<String> properties = new ArrayList<>();
-        // option
-        properties.add(CONNECTOR_HOST);
-        properties.add(CONNECTOR_PORT);
-        properties.add(CONNECTOR_DELIMITER);
-        properties.add(CONNECTOR_MAX_NUM_RETRIES);
-        properties.add(CONNECTOR_DELAY_BETWEEN_RETRIES);
-        // schema
-        properties.add(SCHEMA + ".#." + SCHEMA_DATA_TYPE);
-        properties.add(SCHEMA + ".#." + SCHEMA_NAME);
-        properties.add(SCHEMA + ".#." + SCHEMA_FROM);
-        // format wildcard
-        properties.add(FORMAT + ".*");
-        properties.add(CONNECTOR + ".*");
-        return properties;
+    @Override
+    public Set<ConfigOption<?>> requiredOptions() {
+        final Set<ConfigOption<?>> options = new HashSet<>();
+        options.add(HOSTNAME);
+        options.add(PORT);
+        options.add(FactoryUtil.FORMAT);
+        return options;
     }
 
-    public StreamTableSource createStreamTableSource(Map properties) {
-        // 有效性校验
-        DescriptorProperties validatedProperties = getValidatedProperties(properties);
-
-        // Socket 参数
-        SocketOption socketOption = getSocketOption(validatedProperties);
-
-        // TableSchema
-        TableSchema tableSchema = validatedProperties.getTableSchema(SCHEMA);
-        TableSchema schema = TableSchemaUtils.getPhysicalSchema(tableSchema);
-
-        // 创建 SocketTableSource
-        SocketTableSource tableSource = SocketTableSource.builder()
-                .setSchema(schema)
-                .setSocketOption(socketOption)
-                .build();
-        return tableSource;
+    @Override
+    public Set<ConfigOption<?>> optionalOptions() {
+        final Set<ConfigOption<?>> options = new HashSet<>();
+        options.add(DELIMITER);
+        options.add(MAX_NUM_RETRIES);
+        options.add(DELAY_BETWEEN_RETRIES);
+        return options;
     }
 
-    // 有效 Properties
-    private DescriptorProperties getValidatedProperties(Map<String, String> properties) {
-        // Map -> DescriptorProperties
-        DescriptorProperties descriptorProperties = new DescriptorProperties(true);
-        descriptorProperties.putProperties(properties);
+    @Override
+    public DynamicTableSource createDynamicTableSource(Context context) {
+        final FactoryUtil.TableFactoryHelper helper = FactoryUtil.createTableFactoryHelper(this, context);
 
-        // Schema 校验
-        SchemaValidator schemaValidator = new SchemaValidator(true, false, false);
-        schemaValidator.validate(descriptorProperties);
+        // discover a suitable decoding format
+        final DecodingFormat<DeserializationSchema<RowData>> decodingFormat = helper.discoverDecodingFormat(
+                DeserializationFormatFactory.class,
+                FactoryUtil.FORMAT);
 
-        // Socket 参数校验
-        SocketValidator socketValidator = new SocketValidator();
-        socketValidator.validate(descriptorProperties);
+        // validate all options
+        helper.validate();
 
-        return descriptorProperties;
-    }
-
-    // Socket 参数
-    private SocketOption getSocketOption(DescriptorProperties descriptorProperties) {
-        String host = descriptorProperties.getString(CONNECTOR_HOST);
-        int port = descriptorProperties.getInt(CONNECTOR_PORT);
+        // get the validated options
+        final ReadableConfig options = helper.getOptions();
+        final String hostname = options.get(HOSTNAME);
+        final int port = options.get(PORT);
 
         SocketOption.Builder builder = SocketOption.builder()
-                .setHostname(host)
+                .setHostname(hostname)
                 .setPort(port);
 
-        // 可选参数
-        descriptorProperties.getOptionalString(CONNECTOR_DELIMITER).ifPresent(builder::setDelimiter);
-        descriptorProperties.getOptionalLong(CONNECTOR_MAX_NUM_RETRIES).ifPresent(builder::setMaxNumRetries);
-        descriptorProperties.getOptionalLong(CONNECTOR_DELAY_BETWEEN_RETRIES).ifPresent(builder::setDelayBetweenRetries);
+        options.getOptional(DELIMITER).ifPresent(builder::setDelimiter);
+        options.getOptional(MAX_NUM_RETRIES).ifPresent(builder::setMaxNumRetries);
+        options.getOptional(DELAY_BETWEEN_RETRIES).ifPresent(builder::setDelayBetweenRetries);
 
-        return builder.build();
+        // derive the produced data type (excluding computed columns) from the catalog table
+        final DataType producedDataType = context.getCatalogTable().getSchema().toPhysicalRowDataType();
+
+        // 创建 SocketTableSource
+        SocketDynamicTableSource tableSource = SocketDynamicTableSource.builder()
+                .setSocketOption(builder.build())
+                .setDecodingFormat(decodingFormat)
+                .setProducedDataType(producedDataType)
+                .build();
+        return tableSource;
     }
 }
