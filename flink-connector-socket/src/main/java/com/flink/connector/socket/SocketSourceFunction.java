@@ -3,13 +3,11 @@ package com.flink.connector.socket;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
-import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 import org.apache.flink.table.data.RowData;
-import org.apache.flink.types.Row;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
@@ -21,13 +19,13 @@ import java.net.Socket;
  * 日期：2022/5/26 下午11:01
  */
 public class SocketSourceFunction extends RichSourceFunction<RowData> implements ResultTypeQueryable<RowData> {
-    private static final String DEFAULT_DELIMITER = "\n";
+    private static final int DEFAULT_DELIMITER = 10;
     private static final long DEFAULT_MAX_NUM_RETRIES = 3;
     private static final long DEFAULT_DELAY_BETWEEN_RETRIES = 500;
 
     private final String hostname;
     private final int port;
-    private final String delimiter;
+    private final byte byteDelimiter;
     private final long maxNumRetries;
     private final long delayBetweenRetries;
     private final DeserializationSchema<RowData> deserializer;
@@ -38,7 +36,7 @@ public class SocketSourceFunction extends RichSourceFunction<RowData> implements
     public SocketSourceFunction(SocketOption option, DeserializationSchema<RowData> deserializer) {
         this.hostname = option.getHostname();
         this.port = option.getPort();
-        this.delimiter = option.getDelimiter().orElse(DEFAULT_DELIMITER);
+        this.byteDelimiter = (byte)(int)option.getByteDelimiter().orElse(DEFAULT_DELIMITER);
         this.maxNumRetries = option.getMaxNumRetries().orElse(DEFAULT_MAX_NUM_RETRIES);
         this.delayBetweenRetries = option.getDelayBetweenRetries().orElse(DEFAULT_DELAY_BETWEEN_RETRIES);
         this.deserializer = deserializer;
@@ -51,42 +49,30 @@ public class SocketSourceFunction extends RichSourceFunction<RowData> implements
 
     @Override
     public void run(SourceContext<RowData> sourceContext) throws Exception {
-        long attempt = 0;
-        final StringBuilder result = new StringBuilder();
         while (isRunning) {
-            try (Socket socket = new Socket()) {
+            // open and consume from socket
+            try (final Socket socket = new Socket()) {
                 currentSocket = socket;
                 socket.connect(new InetSocketAddress(hostname, port), 0);
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-                    char[] buffer = new char[8012];
-                    int bytes;
-                    while ((bytes = reader.read(buffer)) != -1) {
-                        result.append(buffer, 0, bytes);
-                        int delimiterPos;
-                        // 根据指定的分隔符循环切分字符串 buffer
-                        while (result.length() >= delimiter.length() && (delimiterPos = result.indexOf(delimiter)) != -1) {
-                            // 切分字符串 result
-                            String record = result.substring(0, delimiterPos);
-                            if (delimiter.equals("\n") && record.endsWith("\r")) {
-                                record = record.substring(0, record.length() - 1);
-                            }
-                            // 输出切分好的字符串
-                            sourceContext.collect(Row.of(record));
-                            // 切分剩余字符串
-                            result.delete(0, delimiterPos + delimiter.length());
+                try (InputStream stream = socket.getInputStream()) {
+                    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                    int b;
+                    while ((b = stream.read()) >= 0) {
+                        // buffer until delimiter
+                        if (b != byteDelimiter) {
+                            buffer.write(b);
+                        }
+                        // decode and emit record
+                        else {
+                            sourceContext.collect(deserializer.deserialize(buffer.toByteArray()));
+                            buffer.reset();
                         }
                     }
                 }
+            } catch (Throwable t) {
+                t.printStackTrace(); // print and continue
             }
-
-            if (isRunning) {
-                attempt++;
-                if (maxNumRetries == -1 || attempt < maxNumRetries) {
-                    Thread.sleep(delayBetweenRetries);
-                } else {
-                    break;
-                }
-            }
+            Thread.sleep(1000);
         }
     }
 

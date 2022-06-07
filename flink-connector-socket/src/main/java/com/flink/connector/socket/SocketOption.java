@@ -13,18 +13,18 @@ import java.util.Optional;
  */
 public class SocketOption implements Serializable {
     private String hostname;
-    private int port;
+    private Integer port;
     @Nullable
-    private String delimiter;
+    private Integer byteDelimiter;
     @Nullable
     private Long maxNumRetries;
     @Nullable
     private Long delayBetweenRetries;
 
-    public SocketOption(String hostname, int port, String delimiter, Long maxNumRetries, Long delayBetweenRetries) {
+    public SocketOption(String hostname, Integer port, Integer byteDelimiter, Long maxNumRetries, Long delayBetweenRetries) {
         this.hostname = hostname;
         this.port = port;
-        this.delimiter = delimiter;
+        this.byteDelimiter = byteDelimiter;
         this.maxNumRetries = maxNumRetries;
         this.delayBetweenRetries = delayBetweenRetries;
     }
@@ -37,8 +37,8 @@ public class SocketOption implements Serializable {
         return port;
     }
 
-    public Optional<String> getDelimiter() {
-        return Optional.ofNullable(delimiter);
+    public Optional<Integer> getByteDelimiter() {
+        return Optional.ofNullable(byteDelimiter);
     }
 
     public Optional<Long> getMaxNumRetries() {
@@ -55,8 +55,8 @@ public class SocketOption implements Serializable {
 
     public static class Builder {
         private String hostname;
-        private int port;
-        private String delimiter;
+        private Integer port;
+        private Integer byteDelimiter;
         private Long maxNumRetries;
         private Long delayBetweenRetries;
 
@@ -65,13 +65,13 @@ public class SocketOption implements Serializable {
             return this;
         }
 
-        public Builder setPort(int port) {
+        public Builder setPort(Integer port) {
             this.port = port;
             return this;
         }
 
-        public Builder setDelimiter(String delimiter) {
-            this.delimiter = delimiter;
+        public Builder setByteDelimiter(Integer byteDelimiter) {
+            this.byteDelimiter = byteDelimiter;
             return this;
         }
 
@@ -86,7 +86,7 @@ public class SocketOption implements Serializable {
         }
 
         public SocketOption build() {
-            return new SocketOption(hostname, port, delimiter, maxNumRetries, delayBetweenRetries);
+            return new SocketOption(hostname, port, byteDelimiter, maxNumRetries, delayBetweenRetries);
         }
     }
 }

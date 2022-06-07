@@ -33,9 +33,9 @@ public class SocketSourceTableFactory implements DynamicTableSourceFactory {
             .intType()
             .noDefaultValue();
 
-    public static final ConfigOption<String> DELIMITER = ConfigOptions.key("delimiter")
-            .stringType()
-            .defaultValue("\n");
+    public static final ConfigOption<Integer> DELIMITER = ConfigOptions.key("byte-delimiter")
+            .intType()
+            .defaultValue(10);
 
     public static final ConfigOption<Long> MAX_NUM_RETRIES = ConfigOptions.key("max_num_retries")
             .longType()
@@ -89,7 +89,7 @@ public class SocketSourceTableFactory implements DynamicTableSourceFactory {
                 .setHostname(hostname)
                 .setPort(port);
 
-        options.getOptional(DELIMITER).ifPresent(builder::setDelimiter);
+        options.getOptional(DELIMITER).ifPresent(builder::setByteDelimiter);
         options.getOptional(MAX_NUM_RETRIES).ifPresent(builder::setMaxNumRetries);
         options.getOptional(DELAY_BETWEEN_RETRIES).ifPresent(builder::setDelayBetweenRetries);
 
