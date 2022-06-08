@@ -1,4 +1,4 @@
-package com.flink.format.json;
+package com.flink.format.json.rowData;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.configuration.ConfigOption;

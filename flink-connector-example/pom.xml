@@ -29,7 +29,7 @@
         <!-- 本地运行 Table API& SQL -->
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
+            <artifactId>flink-table-planner-blink_${scala.binary.version}</artifactId>
             <!--<scope>provided</scope>-->
         </dependency>
 
@@ -38,6 +38,11 @@
             <groupId>com.flink.connectors</groupId>
             <artifactId>flink-connector-socket</artifactId>
             <version>1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-json</artifactId>
         </dependency>
 
     </dependencies>
