@@ -33,8 +33,8 @@ import java.util.Map;
  * 公众号：大数据生态
  * 日期：2022/6/8 上午8:53
  */
-public class JsonToRowDataConverters {
-
+public class JsonToRowDataConverters implements Serializable {
+    private static final long serialVersionUID = 1L;
     private boolean failOnMissingField;
     private boolean ignoreParseErrors;
     private final TimestampFormat timestampFormat;
@@ -119,7 +119,7 @@ public class JsonToRowDataConverters {
         };
     }
 
-    private JsonToRowDataConverter createRowConverter(RowType rowType) {
+    public JsonToRowDataConverter createRowConverter(RowType rowType) {
         final JsonToRowDataConverter[] fieldConverters =
                 rowType.getFields().stream()
                         .map(RowType.RowField::getType)

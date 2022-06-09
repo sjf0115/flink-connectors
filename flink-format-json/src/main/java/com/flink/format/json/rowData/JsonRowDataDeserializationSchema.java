@@ -44,7 +44,8 @@ public class JsonRowDataDeserializationSchema implements DeserializationSchema<R
         this.resultTypeInfo = checkNotNull(resultTypeInfo);
         this.failOnMissingField = failOnMissingField;
         this.ignoreParseErrors = ignoreParseErrors;
-        this.runtimeConverter = converters.createConverter(checkNotNull(rowType));
+//        this.runtimeConverter = converters.createConverter(checkNotNull(rowType));
+        this.runtimeConverter = converters.createRowConverter(checkNotNull(rowType));
         this.timestampFormat = timestampFormat;
     }
 
@@ -57,8 +58,7 @@ public class JsonRowDataDeserializationSchema implements DeserializationSchema<R
             if (ignoreParseErrors) {
                 return null;
             }
-            throw new IOException(
-                    format("Failed to deserialize JSON '%s'.", new String(message)), t);
+            throw new IOException(format("Failed to deserialize JSON '%s'.", new String(message)), t);
         }
     }
 
