@@ -1,5 +1,7 @@
 package com.flink.format.debezium.json;
 
+import com.flink.format.debezium.common.JsonOptions;
+import com.flink.format.debezium.common.TimestampFormat;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.configuration.ConfigOption;
@@ -9,9 +11,14 @@ import org.apache.flink.table.connector.format.EncodingFormat;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.factories.DeserializationFormatFactory;
 import org.apache.flink.table.factories.DynamicTableFactory;
+import org.apache.flink.table.factories.FactoryUtil;
 import org.apache.flink.table.factories.SerializationFormatFactory;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
+
+import static com.flink.format.debezium.common.JsonOptions.*;
 
 /**
  * 功能：DebeziumJsonFormatFactory
@@ -22,29 +29,39 @@ import java.util.Set;
  */
 public class DebeziumJsonFormatFactory implements DeserializationFormatFactory, SerializationFormatFactory {
 
+    public static final String IDENTIFIER = "debezium-json";
 
     @Override
     public String factoryIdentifier() {
-        return null;
+        return IDENTIFIER;
     }
 
     @Override
     public Set<ConfigOption<?>> requiredOptions() {
-        return null;
+        return Collections.emptySet();
     }
 
     @Override
     public Set<ConfigOption<?>> optionalOptions() {
-        return null;
+        Set<ConfigOption<?>> options = new HashSet<>();
+        options.add(SCHEMA_INCLUDE);
+        options.add(IGNORE_PARSE_ERRORS);
+        options.add(TIMESTAMP_FORMAT);
+        return options;
     }
 
     @Override
     public DecodingFormat<DeserializationSchema<RowData>> createDecodingFormat(DynamicTableFactory.Context context, ReadableConfig formatOptions) {
-        return null;
+        FactoryUtil.validateFactoryOptions(this, formatOptions);
+        final boolean schemaInclude = formatOptions.get(SCHEMA_INCLUDE);
+        final boolean ignoreParseErrors = formatOptions.get(IGNORE_PARSE_ERRORS);
+        TimestampFormat timestampFormat = JsonOptions.getTimestampFormat(formatOptions);
+        return new DebeziumJsonDecodingFormat(schemaInclude, ignoreParseErrors, timestampFormat);
     }
 
     @Override
     public EncodingFormat<SerializationSchema<RowData>> createEncodingFormat(DynamicTableFactory.Context context, ReadableConfig formatOptions) {
-        return null;
+        throw new UnsupportedOperationException(
+                "Debezium format doesn't support as a sink format yet.");
     }
 }
