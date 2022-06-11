@@ -19,26 +19,19 @@ import java.net.Socket;
  * 日期：2022/5/26 下午11:01
  */
 public class SocketSourceFunction extends RichSourceFunction<RowData> implements ResultTypeQueryable<RowData> {
-    private static final int DEFAULT_DELIMITER = 10;
-    private static final long DEFAULT_MAX_NUM_RETRIES = 3;
-    private static final long DEFAULT_DELAY_BETWEEN_RETRIES = 500;
-
     private final String hostname;
     private final int port;
     private final byte byteDelimiter;
-    private final long maxNumRetries;
-    private final long delayBetweenRetries;
     private final DeserializationSchema<RowData> deserializer;
 
     private volatile boolean isRunning = true;
     private Socket currentSocket;
 
-    public SocketSourceFunction(SocketOption option, DeserializationSchema<RowData> deserializer) {
-        this.hostname = option.getHostname();
-        this.port = option.getPort();
-        this.byteDelimiter = (byte)(int)option.getByteDelimiter().orElse(DEFAULT_DELIMITER);
-        this.maxNumRetries = option.getMaxNumRetries().orElse(DEFAULT_MAX_NUM_RETRIES);
-        this.delayBetweenRetries = option.getDelayBetweenRetries().orElse(DEFAULT_DELAY_BETWEEN_RETRIES);
+    public SocketSourceFunction(String hostname, int port, byte byteDelimiter,
+                                DeserializationSchema<RowData> deserializer) {
+        this.hostname = hostname;
+        this.port = port;
+        this.byteDelimiter = byteDelimiter;
         this.deserializer = deserializer;
     }
 
@@ -83,29 +76,6 @@ public class SocketSourceFunction extends RichSourceFunction<RowData> implements
             currentSocket.close();
         } catch (Throwable t) {
             // ignore
-        }
-    }
-
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    public static class Builder {
-        private SocketOption socketOption;
-        private DeserializationSchema<RowData> deserializer;
-
-        public Builder setSocketOption(SocketOption socketOption) {
-            this.socketOption = socketOption;
-            return this;
-        }
-
-        public Builder setDeserializationSchema(DeserializationSchema<RowData> deserializer) {
-            this.deserializer = deserializer;
-            return this;
-        }
-
-        public SocketSourceFunction build() {
-            return new SocketSourceFunction(socketOption, deserializer);
         }
     }
 }

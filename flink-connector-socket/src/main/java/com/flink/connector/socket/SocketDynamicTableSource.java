@@ -18,13 +18,19 @@ import org.apache.flink.table.types.DataType;
  * 日期：2022/5/26 下午10:57
  */
 public class SocketDynamicTableSource implements ScanTableSource {
-    private final SocketOption socketOption;
+    private final String hostname;
+    private final int port;
+    private final byte byteDelimiter;
     private final DecodingFormat<DeserializationSchema<RowData>> decodingFormat;
     private final DataType producedDataType;
 
-    public SocketDynamicTableSource(SocketOption socketOption, DecodingFormat format, DataType producedDataType) {
-        this.socketOption = socketOption;
-        this.decodingFormat = format;
+    public SocketDynamicTableSource(String hostname, int port, int byteDelimiter,
+                                    DecodingFormat<DeserializationSchema<RowData>> decodingFormat,
+                                    DataType producedDataType) {
+        this.hostname = hostname;
+        this.port = port;
+        this.byteDelimiter = (byte) byteDelimiter;
+        this.decodingFormat = decodingFormat;
         this.producedDataType = producedDataType;
     }
 
@@ -35,52 +41,21 @@ public class SocketDynamicTableSource implements ScanTableSource {
 
     @Override
     public ScanRuntimeProvider getScanRuntimeProvider(ScanContext scanContext) {
-        // create runtime classes that are shipped to the cluster
         final DeserializationSchema<RowData> deserializer = decodingFormat.createRuntimeDecoder(
                 scanContext,
-                producedDataType);
-
-        final SourceFunction<RowData> sourceFunction = new SocketSourceFunction(socketOption, deserializer);
-
+                producedDataType
+        );
+        final SourceFunction<RowData> sourceFunction = new SocketSourceFunction(hostname, port, byteDelimiter, deserializer);
         return SourceFunctionProvider.of(sourceFunction, false);
     }
 
     @Override
     public DynamicTableSource copy() {
-        return new SocketDynamicTableSource(socketOption, decodingFormat, producedDataType);
+        return new SocketDynamicTableSource(hostname, port, byteDelimiter, decodingFormat, producedDataType);
     }
 
     @Override
     public String asSummaryString() {
         return "Socket Dynamic Table Source";
-    }
-
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    public static class Builder {
-        private SocketOption socketOption;
-        private DecodingFormat<DeserializationSchema<RowData>> decodingFormat;
-        private DataType producedDataType;
-
-        public Builder setDecodingFormat(DecodingFormat decodingFormat) {
-            this.decodingFormat = decodingFormat;
-            return this;
-        }
-
-        public Builder setSocketOption(SocketOption socketOption) {
-            this.socketOption = socketOption;
-            return this;
-        }
-
-        public Builder setProducedDataType(DataType producedDataType) {
-            this.producedDataType = producedDataType;
-            return this;
-        }
-
-        public SocketDynamicTableSource build() {
-            return new SocketDynamicTableSource(socketOption, decodingFormat, producedDataType);
-        }
     }
 }

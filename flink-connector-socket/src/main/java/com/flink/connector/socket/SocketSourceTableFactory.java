@@ -2,7 +2,6 @@ package com.flink.connector.socket;
 
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.configuration.ConfigOption;
-import org.apache.flink.configuration.ConfigOptions;
 import org.apache.flink.configuration.ReadableConfig;
 import org.apache.flink.table.connector.format.DecodingFormat;
 import org.apache.flink.table.connector.source.DynamicTableSource;
@@ -14,7 +13,7 @@ import org.apache.flink.table.types.DataType;
 
 import java.util.HashSet;
 import java.util.Set;
-
+import static com.flink.connector.socket.SocketOption.*;
 
 /**
  * 功能：Socket Source TableFactory
@@ -25,29 +24,11 @@ import java.util.Set;
  */
 public class SocketSourceTableFactory implements DynamicTableSourceFactory {
 
-    public static final ConfigOption<String> HOSTNAME = ConfigOptions.key("hostname")
-            .stringType()
-            .noDefaultValue();
-
-    public static final ConfigOption<Integer> PORT = ConfigOptions.key("port")
-            .intType()
-            .noDefaultValue();
-
-    public static final ConfigOption<Integer> DELIMITER = ConfigOptions.key("byte-delimiter")
-            .intType()
-            .defaultValue(10);
-
-    public static final ConfigOption<Long> MAX_NUM_RETRIES = ConfigOptions.key("max_num_retries")
-            .longType()
-            .defaultValue(3L);
-
-    public static final ConfigOption<Long> DELAY_BETWEEN_RETRIES = ConfigOptions.key("delay_between_retries")
-            .longType()
-            .defaultValue(500L);
+    public static final String IDENTIFIER = "socket";
 
     @Override
     public String factoryIdentifier() {
-        return "socket";
+        return IDENTIFIER;
     }
 
     @Override
@@ -62,46 +43,28 @@ public class SocketSourceTableFactory implements DynamicTableSourceFactory {
     @Override
     public Set<ConfigOption<?>> optionalOptions() {
         final Set<ConfigOption<?>> options = new HashSet<>();
-        options.add(DELIMITER);
-        options.add(MAX_NUM_RETRIES);
-        options.add(DELAY_BETWEEN_RETRIES);
+        options.add(BYTE_DELIMITER);
         return options;
     }
 
     @Override
     public DynamicTableSource createDynamicTableSource(Context context) {
         final FactoryUtil.TableFactoryHelper helper = FactoryUtil.createTableFactoryHelper(this, context);
-
         // discover a suitable decoding format
         final DecodingFormat<DeserializationSchema<RowData>> decodingFormat = helper.discoverDecodingFormat(
                 DeserializationFormatFactory.class,
-                FactoryUtil.FORMAT);
-
-        // validate all options
+                FactoryUtil.FORMAT
+        );
+        // 验证参数
         helper.validate();
-
-        // get the validated options
+        // 获取参数
         final ReadableConfig options = helper.getOptions();
         final String hostname = options.get(HOSTNAME);
         final int port = options.get(PORT);
-
-        SocketOption.Builder builder = SocketOption.builder()
-                .setHostname(hostname)
-                .setPort(port);
-
-        options.getOptional(DELIMITER).ifPresent(builder::setByteDelimiter);
-        options.getOptional(MAX_NUM_RETRIES).ifPresent(builder::setMaxNumRetries);
-        options.getOptional(DELAY_BETWEEN_RETRIES).ifPresent(builder::setDelayBetweenRetries);
-
-        // derive the produced data type (excluding computed columns) from the catalog table
+        Integer byteDelimiter = options.get(BYTE_DELIMITER);
+        // 数据类型
         final DataType producedDataType = context.getCatalogTable().getSchema().toPhysicalRowDataType();
-
-        // 创建 SocketTableSource
-        SocketDynamicTableSource tableSource = SocketDynamicTableSource.builder()
-                .setSocketOption(builder.build())
-                .setDecodingFormat(decodingFormat)
-                .setProducedDataType(producedDataType)
-                .build();
-        return tableSource;
+        // 创建 DynamicTableSource
+        return new SocketDynamicTableSource(hostname, port, byteDelimiter, decodingFormat, producedDataType);
     }
 }
