@@ -1,7 +1,7 @@
-package com.flink.format.json.rowData;
+package com.flink.format.json;
 
-import com.flink.format.json.common.TimeFormats;
-import com.flink.format.json.common.TimestampFormat;
+import com.flink.format.common.TimeFormats;
+import com.flink.format.common.TimestampFormat;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.JsonNode;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.ObjectNode;

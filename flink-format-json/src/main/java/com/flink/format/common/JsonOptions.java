@@ -1,4 +1,4 @@
-package com.flink.format.json.common;
+package com.flink.format.common;
 
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;

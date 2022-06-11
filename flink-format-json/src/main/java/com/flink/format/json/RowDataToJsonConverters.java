@@ -1,6 +1,7 @@
-package com.flink.format.json.rowData;
+package com.flink.format.json;
 
-import com.flink.format.json.common.TimestampFormat;
+import com.flink.format.common.TimeFormats;
+import com.flink.format.common.TimestampFormat;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.JsonNode;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.ArrayNode;
@@ -17,7 +18,6 @@ import java.time.LocalTime;
 import java.util.Arrays;
 
 import static java.time.format.DateTimeFormatter.*;
-import static com.flink.format.json.common.TimeFormats.*;
 
 /**
  * 功能：转换器 RowData 转换 Json
@@ -109,7 +109,7 @@ public class RowDataToJsonConverters implements Serializable {
         return (mapper, reuse, value) -> {
             int millisecond = (int) value;
             LocalTime time = LocalTime.ofSecondOfDay(millisecond / 1000L);
-            return mapper.getNodeFactory().textNode(SQL_TIME_FORMAT.format(time));
+            return mapper.getNodeFactory().textNode(TimeFormats.SQL_TIME_FORMAT.format(time));
         };
     }
 
@@ -119,13 +119,13 @@ public class RowDataToJsonConverters implements Serializable {
                 return (mapper, reuse, value) -> {
                     TimestampData timestamp = (TimestampData) value;
                     return mapper.getNodeFactory()
-                            .textNode(ISO8601_TIMESTAMP_FORMAT.format(timestamp.toLocalDateTime()));
+                            .textNode(TimeFormats.ISO8601_TIMESTAMP_FORMAT.format(timestamp.toLocalDateTime()));
                 };
             case SQL:
                 return (mapper, reuse, value) -> {
                     TimestampData timestamp = (TimestampData) value;
                     return mapper.getNodeFactory()
-                            .textNode(SQL_TIMESTAMP_FORMAT.format(timestamp.toLocalDateTime()));
+                            .textNode(TimeFormats.SQL_TIMESTAMP_FORMAT.format(timestamp.toLocalDateTime()));
                 };
             default:
                 throw new TableException(

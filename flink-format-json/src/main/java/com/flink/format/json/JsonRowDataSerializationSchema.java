@@ -1,6 +1,6 @@
-package com.flink.format.json.rowData;
+package com.flink.format.json;
 
-import com.flink.format.json.common.TimestampFormat;
+import com.flink.format.common.TimestampFormat;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.ObjectNode;

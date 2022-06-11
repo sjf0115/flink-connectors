@@ -1,4 +1,4 @@
-package com.flink.format.json.common;
+package com.flink.format.common;
 
 public enum TimestampFormat {
     /**

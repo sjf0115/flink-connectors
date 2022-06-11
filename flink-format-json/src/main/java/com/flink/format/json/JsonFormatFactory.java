@@ -1,7 +1,7 @@
-package com.flink.format.json.rowData;
+package com.flink.format.json;
 
-import com.flink.format.json.common.JsonOptions;
-import com.flink.format.json.common.TimestampFormat;
+import com.flink.format.common.TimestampFormat;
+import com.flink.format.common.JsonOptions;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.flink.configuration.ConfigOption;
@@ -19,10 +19,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.flink.format.json.common.JsonOptions.FAIL_ON_MISSING_FIELD;
-import static com.flink.format.json.common.JsonOptions.IGNORE_PARSE_ERRORS;
-import static com.flink.format.json.common.JsonOptions.TIMESTAMP_FORMAT;
-import static com.flink.format.json.common.JsonOptions.TIMESTAMP_FORMAT_ENUM;
+import static com.flink.format.common.JsonOptions.FAIL_ON_MISSING_FIELD;
+import static com.flink.format.common.JsonOptions.IGNORE_PARSE_ERRORS;
+import static com.flink.format.common.JsonOptions.TIMESTAMP_FORMAT;
+import static com.flink.format.common.JsonOptions.TIMESTAMP_FORMAT_ENUM;
 
 /**
  * 功能：JsonFormatFactory
