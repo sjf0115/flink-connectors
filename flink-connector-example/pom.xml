@@ -40,9 +40,11 @@
             <version>1.0</version>
         </dependency>
 
+        <!-- 自定义 Format ChangelogCsv -->
         <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-json</artifactId>
+            <groupId>com.flink.connectors</groupId>
+            <artifactId>flink-format-changelog-csv</artifactId>
+            <version>1.0</version>
         </dependency>
 
     </dependencies>

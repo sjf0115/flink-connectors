@@ -4,7 +4,7 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.Table;
-import org.apache.flink.table.api.java.StreamTableEnvironment;
+import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.types.Row;
 
 /**
@@ -20,25 +20,26 @@ public class SocketSimpleExample {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         EnvironmentSettings settings = EnvironmentSettings
                 .newInstance()
-                .useOldPlanner()
+                .useBlinkPlanner()
                 .inStreamingMode()
                 .build();
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env, settings);
 
         // 创建 Socket Source 表
         String sourceSql = "CREATE TABLE socket_source_table (\n" +
-                "  word STRING COMMENT '单词'\n" +
+                "  word STRING COMMENT '单词',\n" +
+                "  frequency STRING COMMENT '频次'\n" +
                 ") WITH (\n" +
-                "  'connector.type' = 'socket',\n" +
-                "  'host' = 'localhost',\n" +
+                "  'connector' = 'socket',\n" +
+                "  'hostname' = 'localhost',\n" +
                 "  'port' = '9000',\n" +
-                "  'delimiter' = '\n',\n" +
-                "  'maxNumRetries' = '3',\n" +
-                "  'delayBetweenRetries' = '500'\n" +
+                "  'byte-delimiter' = '10',\n" +
+                "  'format' = 'changelog-csv',\n" +
+                "  'changelog-csv.column-delimiter' = '|'\n" +
                 ")";
-        tEnv.sqlUpdate(sourceSql);
+        tEnv.executeSql(sourceSql);
 
-        Table table = tEnv.sqlQuery("SELECT word\n" +
+        Table table = tEnv.sqlQuery("SELECT word, frequency\n" +
                 "FROM socket_source_table");
         DataStream dataStream = tEnv.toAppendStream(table, Row.class);
         dataStream.print();
