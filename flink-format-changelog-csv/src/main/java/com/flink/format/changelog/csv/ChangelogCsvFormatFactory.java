@@ -1,4 +1,4 @@
-package com.flink.connector.socket;
+package com.flink.format.changelog.csv;
 
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.configuration.ConfigOption;
@@ -23,13 +23,15 @@ import java.util.Set;
  */
 public class ChangelogCsvFormatFactory implements DeserializationFormatFactory {
 
+    public static final String IDENTIFIER = "changelog-csv";
+
     public static final ConfigOption<String> COLUMN_DELIMITER = ConfigOptions.key("column-delimiter")
             .stringType()
             .defaultValue("|");
 
     @Override
     public String factoryIdentifier() {
-        return "changelog-csv";
+        return IDENTIFIER;
     }
 
     @Override
@@ -47,11 +49,9 @@ public class ChangelogCsvFormatFactory implements DeserializationFormatFactory {
     @Override
     public DecodingFormat<DeserializationSchema<RowData>> createDecodingFormat(DynamicTableFactory.Context context, ReadableConfig formatOptions) {
         FactoryUtil.validateFactoryOptions(this, formatOptions);
-
-        // get the validated options
+        // Format 参数
         final String columnDelimiter = formatOptions.get(COLUMN_DELIMITER);
-
-        // create and return the format
-        return new ChangelogCsvFormat(columnDelimiter);
+        // 创建 DecodingFormat
+        return new ChangelogCsvDecodingFormat(columnDelimiter);
     }
 }
