@@ -33,6 +33,12 @@
             <!--<scope>provided</scope>-->
         </dependency>
 
+        <!-- 本地运行 client -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-clients_${scala.binary.version}</artifactId>
+        </dependency>
+
         <!-- 自定义 Connector Socket -->
         <dependency>
             <groupId>com.flink.connectors</groupId>

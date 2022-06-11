@@ -41,9 +41,9 @@ public class SocketSimpleExample {
 
         Table table = tEnv.sqlQuery("SELECT word, frequency\n" +
                 "FROM socket_source_table");
-        DataStream dataStream = tEnv.toAppendStream(table, Row.class);
+        DataStream dataStream = tEnv.toRetractStream(table, Row.class);
         dataStream.print();
 
-        tEnv.execute("SocketSimpleExample");
+        env.execute();
     }
 }

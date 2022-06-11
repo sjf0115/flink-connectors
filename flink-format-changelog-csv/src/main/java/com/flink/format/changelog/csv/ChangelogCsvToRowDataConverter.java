@@ -2,10 +2,12 @@ package com.flink.format.changelog.csv;
 
 import org.apache.flink.table.data.GenericRowData;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.data.StringData;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.RowType;
 import org.apache.flink.types.RowKind;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -15,7 +17,7 @@ import java.util.List;
  * 公众号：大数据生态
  * 日期：2022/6/11 下午3:43
  */
-public class ChangelogCsvToRowDataConverter {
+public class ChangelogCsvToRowDataConverter implements Serializable{
     private final RowType rowType;
 
     public ChangelogCsvToRowDataConverter(RowType rowType) {
@@ -51,7 +53,7 @@ public class ChangelogCsvToRowDataConverter {
             case BOOLEAN:
                 return Boolean.parseBoolean(value);
             case VARCHAR:
-                return value;
+                return StringData.fromString(value);
             default:
                 throw new UnsupportedOperationException("Unsupported type: " + type);
         }
