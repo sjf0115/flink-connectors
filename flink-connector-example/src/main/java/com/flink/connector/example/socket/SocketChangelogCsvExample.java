@@ -8,13 +8,13 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.types.Row;
 
 /**
- * 功能：Socket Connector 简单示例
+ * 功能：Socket 自定义 Connector 使用 ChangelogCsv 自定义格式
  * 作者：SmartSi
  * 博客：http://smartsi.club/
  * 公众号：大数据生态
  * 日期：2022/5/30 下午10:47
  */
-public class SocketSimpleExample {
+public class SocketChangelogCsvExample {
     public static void main(String[] args) throws Exception {
         // TableEnvironment
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();

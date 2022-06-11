@@ -53,6 +53,13 @@
             <version>1.0</version>
         </dependency>
 
+        <!-- 自定义 Format Json -->
+        <dependency>
+            <groupId>com.flink.connectors</groupId>
+            <artifactId>flink-format-json</artifactId>
+            <version>1.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>
