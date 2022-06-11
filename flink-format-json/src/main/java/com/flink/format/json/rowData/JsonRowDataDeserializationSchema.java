@@ -39,13 +39,11 @@ public class JsonRowDataDeserializationSchema implements DeserializationSchema<R
                     "JSON format doesn't support failOnMissingField and ignoreParseErrors are both enabled.");
         }
 
-        JsonToRowDataConverters converters = new JsonToRowDataConverters(failOnMissingField, ignoreParseErrors, timestampFormat);
-
         this.resultTypeInfo = checkNotNull(resultTypeInfo);
         this.failOnMissingField = failOnMissingField;
         this.ignoreParseErrors = ignoreParseErrors;
-//        this.runtimeConverter = converters.createConverter(checkNotNull(rowType));
-        this.runtimeConverter = converters.createRowConverter(checkNotNull(rowType));
+        this.runtimeConverter = new JsonToRowDataConverters(failOnMissingField, ignoreParseErrors, timestampFormat)
+                .createConverter(checkNotNull(rowType));
         this.timestampFormat = timestampFormat;
     }
 

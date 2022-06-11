@@ -71,6 +71,7 @@ public class JsonFormatFactory implements DeserializationFormatFactory, Serializ
         return null;
     }
 
+    // Format 参数验证
     static void validateFormatOptions(ReadableConfig formatOptions) {
         boolean failOnMissingField = formatOptions.get(FAIL_ON_MISSING_FIELD);
         boolean ignoreParseErrors = formatOptions.get(IGNORE_PARSE_ERRORS);

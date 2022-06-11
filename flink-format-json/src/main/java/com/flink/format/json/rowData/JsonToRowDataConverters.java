@@ -27,7 +27,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * 功能：JsonToRowDataConverters
+ * 功能：转换器 Json 转换 RowData
  * 作者：SmartSi
  * 博客：http://smartsi.club/
  * 公众号：大数据生态

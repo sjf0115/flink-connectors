@@ -43,7 +43,6 @@ public class JsonOptions {
 
     public static final String SQL = "SQL";
     public static final String ISO_8601 = "ISO-8601";
-
     public static final Set<String> TIMESTAMP_FORMAT_ENUM = new HashSet<>(Arrays.asList(SQL, ISO_8601));
 
     public static TimestampFormat getTimestampFormat(ReadableConfig config) {
