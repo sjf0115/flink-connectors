@@ -1,4 +1,4 @@
-package com.flink.connector.redis.mapper;
+package com.flink.connector.redis.common;
 
 public enum RedisDataType {
     STRING,

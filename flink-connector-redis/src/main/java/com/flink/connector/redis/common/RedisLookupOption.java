@@ -1,4 +1,4 @@
-package com.flink.connector.redis.options;
+package com.flink.connector.redis.common;
 
 /**
  * 功能：RedisLookupOption

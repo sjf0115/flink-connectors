@@ -1,7 +1,7 @@
 package com.flink.connector.redis.sink;
 
-import com.flink.connector.redis.options.RedisOption;
-import com.flink.connector.redis.options.RedisSinkOption;
+import com.flink.connector.redis.common.RedisOption;
+import com.flink.connector.redis.common.RedisSinkOption;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStream;

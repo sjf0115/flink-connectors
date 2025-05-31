@@ -1,8 +1,8 @@
 package com.flink.connector.redis;
 
-import com.flink.connector.redis.options.RedisLookupOption;
-import com.flink.connector.redis.options.RedisOption;
-import com.flink.connector.redis.options.RedisSinkOption;
+import com.flink.connector.redis.common.RedisLookupOption;
+import com.flink.connector.redis.common.RedisOption;
+import com.flink.connector.redis.common.RedisSinkOption;
 import com.flink.connector.redis.sink.RedisTableSink;
 import com.flink.connector.redis.source.RedisTableLookupSource;
 import org.apache.flink.api.java.tuple.Tuple2;
@@ -18,7 +18,7 @@ import org.apache.flink.types.Row;
 
 import java.util.*;
 
-import static com.flink.connector.redis.descriptor.RedisValidator.*;
+import static com.flink.connector.redis.common.RedisValidator.*;
 import static org.apache.flink.table.descriptors.FormatDescriptorValidator.FORMAT;
 import static org.apache.flink.table.descriptors.Schema.*;
 /**

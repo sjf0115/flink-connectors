@@ -1,7 +1,7 @@
 package com.flink.connector.redis.source;
 
-import com.flink.connector.redis.options.RedisLookupOption;
-import com.flink.connector.redis.options.RedisOption;
+import com.flink.connector.redis.common.RedisLookupOption;
+import com.flink.connector.redis.common.RedisOption;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;

@@ -1,4 +1,4 @@
-package com.flink.connector.redis.options;
+package com.flink.connector.redis.common;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 

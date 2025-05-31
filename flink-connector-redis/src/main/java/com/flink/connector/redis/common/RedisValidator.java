@@ -1,4 +1,4 @@
-package com.flink.connector.redis.descriptor;
+package com.flink.connector.redis.common;
 
 import org.apache.flink.table.descriptors.ConnectorDescriptorValidator;
 import org.apache.flink.table.descriptors.DescriptorProperties;
